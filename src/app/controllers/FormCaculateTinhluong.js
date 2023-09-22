@@ -552,8 +552,8 @@ exports.getDefaultVarTinhLuongCompany = async (req, res) => {
           {
             // "_id": 3,
             "com_id": com_id,
-            "name_var": "ngay_cong_chuan_cua_thang",
-            "note_var": "Ngày công chuẩn của tháng",
+            "name_var": "cong_chuan",
+            "note_var": "Công chuẩn",
             "time_created": new Date(),
             "time_edited": new Date(),
             "__v": 0
@@ -588,8 +588,8 @@ exports.getDefaultVarTinhLuongCompany = async (req, res) => {
           {
             // "_id": 7,
             "com_id": com_id,
-            "name_var": "ngay_cong_thuc_te",
-            "note_var": "Ngày công thực tế",
+            "name_var": "cong_thuc",
+            "note_var": "Công thực",
             "time_created": new Date(),
             "time_edited": new Date(),
             "__v": 0
