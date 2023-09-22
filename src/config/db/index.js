@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 async function connect() {
   try {
-    await mongoose.connect('mongodb+srv://diepton:rmHovBC2UpLtrEd6@cluster0.j84bpew.mongodb.net/Excel?retryWrites=true&w=majority/EXCEL', {
+    await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       // useCreateIndex: true
