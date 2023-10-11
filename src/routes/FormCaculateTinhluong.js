@@ -12,19 +12,19 @@ router.put("/editformcalculate", formData.parse(), FormCaculateTinhluongControll
 // Lấy công thức theo công ty
 router.post("/getformcompany", formData.parse(), FormCaculateTinhluongController.GetFormCompany);
 //Thưc hiện tính toán
-router.post("/calculate", formData.parse(), FormCaculateTinhluongController.Calculate);
+// router.post("/calculate", formData.parse(), FormCaculateTinhluongController.Calculate);
 //Khởi tạo giá trị cho một ô
-router.post("/SetCellValue",formData.parse(), FormCaculateTinhluongController.SetCellValue);
+// router.post("/SetCellValue",formData.parse(), FormCaculateTinhluongController.SetCellValue);
 //lấy ra tất cả các ô
-router.get("/getallcellvalue", formData.parse(), FormCaculateTinhluongController.getAllCellValue);
+// router.get("/getallcellvalue", formData.parse(), FormCaculateTinhluongController.getAllCellValue);
 
 // router.post("/getdatacellcompany", formData.parse(), FormCaculateTinhluongController.getDataCellCompany);
-router.post("/getonecellcompany", formData.parse(), FormCaculateTinhluongController.getOneCellValue);
+// router.post("/getonecellcompany", formData.parse(), FormCaculateTinhluongController.getOneCellValue);
 
 //lấy ra tất cả các ô của công ty
-router.post("/getallcellvaluecompany", formData.parse(), FormCaculateTinhluongController.getAllCellValueCompany);
+// router.post("/getallcellvaluecompany", formData.parse(), FormCaculateTinhluongController.getAllCellValueCompany);
 //Thêm collum
-router.post("/addcolum",formData.parse(), FormCaculateTinhluongController.CreateNewColum);
+// router.post("/addcolum",formData.parse(), FormCaculateTinhluongController.CreateNewColum);
 //Lấy ra biến tính lương
 router.get("/getvartinhluong",formData.parse(), FormCaculateTinhluongController.getAllVarTinhLuong);
 //Lấy ra biến tính lương ban đầu của một công ty
@@ -34,12 +34,15 @@ router.post("/getvartinhluongcompany",formData.parse(), FormCaculateTinhluongCon
 
 //Thêm Biến tính lương(Thêm một cột)
 router.post("/addvartinhluong",formData.parse(), FormCaculateTinhluongController.CreateVarTinhLuong);
-//Thêm dữ liệu ban đầu cửa biến lính lương
-router.post("/adddefaultvartinhluong", formData.parse(), FormCaculateTinhluongController.CreateMultipleVarTinhLuong);
 
 //Sửa biến tính lương(Sửa một cột)
 router.put("/updatevartinhluong",formData.parse(), FormCaculateTinhluongController.EditVarTinhLuong);
 //Xóa một biến tính lương(một cột)
 router.put("/deletevartinhluong",formData.parse(), FormCaculateTinhluongController.DeleteVarTinhLuong);
+//Api lưu dữ liệu tính lương
+router.post("/savedataexportluong",formData.parse(), FormCaculateTinhluongController.SaveDataTinhLuong);
+//Api lấy dữ liệu tính lương
+router.post("/getdataexportluong",formData.parse(), FormCaculateTinhluongController.GetDataTinhLuong);
+
 
 module.exports = router

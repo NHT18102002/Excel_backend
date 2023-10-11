@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const DefinationVariableTinhluongSchema = new Schema({
 
-    _id: {
+    em_id: {
         type: Number,
         // require: true
     },

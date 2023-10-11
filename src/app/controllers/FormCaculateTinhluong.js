@@ -5,7 +5,7 @@ const FormCaculateTinhluong = require("../models/FormCaculateTinhluong")
 // const SampleDefinationVarTinhluong = require("../../models/qlcnew/tinhluongexcel/SampleDefinationVarTinhluong");
 const DefinationVariableTinhluong = require("../models/DefinationVariableTinhluong");
 const defaultData = require("../../util/data")
-const Cellvalue = require("../models/cellvalue")
+const DataExportLuong = require("../models/DataExportLuong")
 
 
 //Hàm rách số ra khỏi chữ
@@ -141,377 +141,6 @@ exports.EditForm = async (req, res) => {
 };
 
 
-// //API thực hiện tính lương
-// exports.Calculate = async (req, res) => {
-//   try {
-//     const { cell, com_id } = req.body;
-//     // Lấy công thức từ cơ sở dữ liệu dựa trên com_id
-//     const formCaculate = await FormCaculateTinhluong.findOne({ com_id });
-//     if (!formCaculate || !formCaculate.form_caculate) {
-//       res.status(404).json({ error: 'Không tìm thấy công thức tính lương cho công ty' });
-//       return;
-//     }
-//     const formula = formCaculate.form_caculate;
-
-//     // Kiểm tra công thức trước khi tính toán
-//     if (!formula) {
-//       res.status(400).json({ error: 'Công thức không hợp lệ' });
-//       return;
-//     }
-//     // Lấy giá trị từ cơ sở dữ liệu cho các ô trong công thức
-//     const operands = formula.match(/[A-Z]+\d+|\d+[A-Z]+/g);
-
-
-//     var newformula = formula
-//     for (const operand of operands) {
-//       const cellValue = await Cellvalue.findOne({ cell: operand });
-//       let tempValue = cellValue ? cellValue.value : 0;
-//       newformula = newformula.replace(operand, tempValue);
-//       newformula = newformula.replace(/^=/, '')
-
-//     }
-//     var answer = eval(newformula)
-//     var result = answer.toFixed(2);
-//     //Kiểm tra ô đã có trong cơ sở dữ liệu chưa nếu có thì sửa còn chưa có thì thêm mới
-//     const cellvalue = await Cellvalue.findOne({ cell, com_id });
-//     if (cellvalue) {
-//       cellvalue.value = result;
-//       await cellvalue.save();
-//     } else {
-//       const newCellValue = new Cellvalue({ com_id, cell, value: result });
-//       await newCellValue.save();
-//     }
-
-
-//     functions.success(res, "Thực hiện tính thành công", { result })
-
-//   } catch (error) {
-//     // Nếu xảy ra lỗi trong quá trình tính toán, trả về phản hồi lỗi
-//     functions.setError(res, "Lỗi tính toán!", 510);
-//   }
-// };
-
-// API để xem  công thức theo công ty
-exports.GetFormCompany = async (req, res) => {
-  try {
-    const { com_id } = req.body;
-    const data = await functions.getDatafind(FormCaculateTinhluong, { com_id: com_id });
-    if (data) {
-      return await functions.success(res, 'Lấy công thức thành công', { data });
-    };
-    return functions.setError(res, 'Không có dữ liệu', 404);
-  } catch (err) {
-    functions.setError(res, err.message);
-  }
-};
-
-
-
-
-
-//API thêm, sửa giá trị một ô
-exports.SetCellValue = async (req, res) => {
-  try {
-    const { com_id, cell, value } = req.body;
-    const cellPattern = /^[A-Z]+\d+$/;
-    if (!cellPattern.test(cell)) {
-      functions.setError(res, "Invalid cell format. Cell must be in the format like A1, A2, B3, ...");
-      return;
-    }
-    if (isNaN(com_id)) {
-      functions.setError(res, "Id must be a number");
-    } else {
-      const data = await Cellvalue.findOne({ com_id, cell });
-
-      if (data) {
-        data.value = value;
-        await data.save();
-        functions.success(res, 'Giá trị đã được cập nhật', { cellValue: data })
-
-      } else {
-        const newCellValue = new Cellvalue({ com_id, cell, value })
-        await newCellValue.save();
-        functions.success(res, 'Giá trị đã được thêm mới', { cellValue: newCellValue });
-      }
-    }
-  } catch (error) {
-    functions.setError(res, "thêm giá trị thất bại!", 510);
-
-  }
-};
-
-//Api xem tất cả các ô
-exports.getAllCellValue = async (req, res) => {
-  try {
-    const allCellValues = await Cellvalue.find();
-    functions.success(res, 'Xem danh sách các ô thành công!', { allCellValues })
-  } catch (error) {
-    functions.setError(res, "Lỗi truy vấn dữ liệu!", 510);
-
-  }
-};
-
-
-//Api lấy ra một ô của một công ty
-exports.getOneCellValue = async (req, res) => {
-  try {
-    const { com_id, cell: cell } = req.body;
-    const data = await functions.getDatafind(Cellvalue, { com_id: com_id, cell: cell });
-    if (data) {
-      return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data });
-    };
-  } catch (error) {
-    functions.setError(res, "Lỗi truy vấn dữ liệu!", 510);
-
-  }
-};
-
-//Api lấy các ô theo công ty
-exports.getAllCellValueCompany = async (req, res) => {
-  try {
-    const { com_id } = req.body;
-    const data = await functions.getDatafind(Cellvalue, { com_id: com_id });
-    // if (data) {
-    //   return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data });
-    // };
-    if (data) {
-      // Sắp xếp dữ liệu theo khóa "cell" tăng dần
-      const sortedData = data.sort((a, b) => {
-        if (a.cell < b.cell) {
-          return -1;
-        }
-        if (a.cell > b.cell) {
-          return 1;
-        }
-        return 0;
-      });
-
-      return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data: sortedData });
-    }
-    return functions.setError(res, 'Không có dữ liệu', 404);
-  } catch (err) {
-    functions.setError(res, err.message);
-  }
-};
-
-
-
-
-// //Api lấy các ô theo công ty
-// exports.getDataCellCompany = async (req, res) => {
-//   try {
-//     const { com_id } = req.body;
-//     const data = await functions.getDatafind(Cellvalue, { com_id: com_id });
-
-//     if (data) {
-//       // Sắp xếp dữ liệu theo khóa "cell" tăng dần
-//       const sortedData = data.sort((a, b) => {
-//         if (a.cell < b.cell) {
-//           return -1;
-//         }
-//         if (a.cell > b.cell) {
-//           return 1;
-//         }
-//         return 0;
-//       });
-
-//       const transformedData = sortedData.map(item => {
-//         return `${item.cell}:${item.value}`;
-//       });
-
-//       const columns = Array.from({ length: 40 }, (_, index) => String.fromCharCode(65 + index)); // Tạo một mảng chứa các chữ cái A-Z tương ứng với số cột
-
-//       const resultData = columns.map(column => {
-//         return transformedData.filter(item => item.startsWith(`${column}:`));
-//       });
-
-//       return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data: resultData });
-//     }
-
-//     return functions.setError(res, 'Không có dữ liệu', 404);
-//   } catch (err) {
-//     functions.setError(res, err.message);
-//   }
-// };
-
-
-
-//API thực hiện tính lương
-exports.Calculate = async (req, res) => {
-  try {
-    const { cell, com_id } = req.body;
-    // Lấy công thức từ cơ sở dữ liệu dựa trên com_id
-    const formCaculate = await FormCaculateTinhluong.findOne({ com_id });
-    if (!formCaculate || !formCaculate.form_caculate) {
-      res.status(404).json({ error: 'Không tìm thấy công thức tính lương cho công ty' });
-      return;
-    }
-    const formula = formCaculate.form_caculate;
-
-    // Kiểm tra công thức trước khi tính toán
-    if (!formula) {
-      res.status(400).json({ error: 'Công thức không hợp lệ' });
-      return;
-    }
-    // Lấy giá trị từ cơ sở dữ liệu cho các ô trong công thức
-    const operands = formula.match(/[A-Z]+\d+|\d+[A-Z]+/g);
-
-
-    var newformula = formula
-    for (const operand of operands) {
-      const cellValue = await Cellvalue.findOne({ cell: operand });
-      let tempValue = cellValue ? cellValue.value : 0;
-      newformula = newformula.replace(operand, tempValue);
-      newformula = newformula.replace(/^=/, '')
-
-    }
-    var answer = eval(newformula)
-    var result = answer.toFixed(2);
-    //Kiểm tra ô đã có trong cơ sở dữ liệu chưa nếu có thì sửa còn chưa có thì thêm mới
-    const cellvalue = await Cellvalue.findOne({ cell, com_id });
-    if (cellvalue) {
-      cellvalue.value = result;
-      await cellvalue.save();
-    } else {
-      const newCellValue = new Cellvalue({ com_id, cell, value: result });
-      await newCellValue.save();
-    }
-
-
-    functions.success(res, "Thực hiện tính thành công", { result })
-
-  } catch (error) {
-    // Nếu xảy ra lỗi trong quá trình tính toán, trả về phản hồi lỗi
-    functions.setError(res, "Lỗi tính toán!", 510);
-  }
-};
-
-
-
-//Tạo một cột header (note_var) mới trong ô tính lương
-exports.CreateNewColum = async (req, res) => {
-  const {
-    note_var,
-    name_var
-  } = req.body;
-
-  if (!note_var) {
-    functions.setError(res, "note_var required");
-  } else if (!name_var) {
-    functions.setError(res, "name_var required");
-  } else {
-    let maxId = await functions.getMaxID(SampleDefinationVarTinhluong);
-    if (!maxId) {
-      maxId = 0;
-    }
-    const _id = Number(maxId) + 1;
-    const SampleDefinationVarTinhluongs = new SampleDefinationVarTinhluong({
-      _id: _id,
-      note_var: note_var,
-      name_var: name_var
-    });
-    await SampleDefinationVarTinhluongs.save()
-      .then(() => {
-        functions.success(res, "SampleDefinationVarTinhluong saved successfully", SampleDefinationVarTinhluongs);
-      })
-      .catch(err => functions.setError(res, err.message));
-  }
-}
-
-
-
-
-
-//Tạo mới một biến tính lương(thêm cột) trong ô tính lương
-exports.CreateVarTinhLuong = async (req, res) => {
-  const {
-    note_var,
-    com_id
-  } = req.body;
-  const name_var = formatNoteVar(note_var)
-  const ForexistingNoteVarmula = await DefinationVariableTinhluong.findOne({ com_id, note_var });
-  if (!note_var) {
-    functions.setError(res, "note_var required");
-  }
-  else if (!com_id) {
-    functions.setError(res, "com_id required");
-  } else if (isNaN(com_id)) {
-    functions.setError(res, "Com_id must be a number");
-  }
-  // else {
-  //   const existingNoteVar  = await DefinationVariableTinhluong.findOne({ com_id, note_var });
-  //   if (existingNoteVar ) {
-  //     functions.setError(res, "note_var is exsit!");
-  //   }
-  // } 
-  else if (!ForexistingNoteVarmula) {
-    let maxId = await functions.getMaxID(DefinationVariableTinhluong);
-    if (!maxId) {
-      maxId = 0;
-    }
-    const _id = Number(maxId) + 1;
-    const DefinationVariableTinhluongs = new DefinationVariableTinhluong({
-      _id: _id,
-      com_id: com_id,
-      note_var: note_var,
-      name_var: name_var,
-
-    });
-    await DefinationVariableTinhluongs.save()
-      .then(() => {
-        functions.success(res, "DefinationVarTinhluong saved successfully", DefinationVariableTinhluongs);
-      })
-      .catch(err => functions.setError(res, err.message));
-  }
-}
-
-
-// API tạo mới nhiều biến tính lương từ mảng data
-exports.CreateMultipleVarTinhLuong = async (req, res) => {
-  try {
-    const { data, com_id } = req.body;
-    if (!Array.isArray(data) || !com_id) {
-      return functions.setError(res, "Invalid input data");
-    }
-
-    const createdVariables = [];
-
-    for (const note_var of data) {
-      const name_var = formatNoteVar(note_var);
-
-      // Kiểm tra xem biến tính lương đã tồn tại hay chưa
-      const existingVariable = await DefinationVariableTinhluong.findOne({ com_id, note_var });
-
-      if (!existingVariable) {
-        let maxId = await functions.getMaxID(DefinationVariableTinhluong);
-        if (!maxId) {
-          maxId = 0;
-        }
-        const _id = Number(maxId) + 1;
-
-        const newVariable = new DefinationVariableTinhluong({
-          _id,
-          com_id,
-          note_var,
-          name_var,
-        });
-
-        await newVariable.save();
-        createdVariables.push(newVariable);
-      }
-    }
-
-    if (createdVariables.length > 0) {
-      functions.success(res, "DefinationVarTinhluong saved successfully", createdVariables);
-    } else {
-      functions.setError(res, "No new variables created");
-    }
-  } catch (error) {
-    functions.setError(res, error.message);
-  }
-};
-
-
 
 //Lấy tất cả biến tính lương
 exports.getAllVarTinhLuong = async (req, res) => {
@@ -526,7 +155,6 @@ exports.getDefaultVarTinhLuongCompany = async (req, res) => {
 
   try {
     const com_id = req.body.com_id;
-
     const existingData = await functions.getDatafind(DefinationVariableTinhluong, { com_id: com_id });
     if (existingData.length === 0) {
       await DefinationVariableTinhluong.insertMany(
@@ -630,7 +258,15 @@ exports.getDefaultVarTinhLuongCompany = async (req, res) => {
             "time_edited": new Date(),
             "__v": 0
           },
-
+          {
+            // "_id": 12,
+            "com_id": com_id,
+            "name_var": "thuong",
+            "note_var": "Thưởng",
+            "time_created": new Date(),
+            "time_edited": new Date(),
+            "__v": 0
+          },
           {
             // "_id": 12,
             "com_id": com_id,
@@ -774,15 +410,7 @@ exports.getDefaultVarTinhLuongCompany = async (req, res) => {
             "time_created": new Date(),
             "time_edited": new Date(),
           },
-          {
-            // "_id": 28,
-            "com_id": com_id,
-            "name_var": "tong_luong_thuc_te",
-            "note_var": "Tổng lương thực tế",
-            "time_created": new Date(),
-            "time_edited": new Date(),
-            "__v": 0
-          }
+
         ]
       );
       // console.log(defaultData)
@@ -865,27 +493,7 @@ exports.EditVarTinhLuong = async (req, res) => {
 };
 
 
-//Xóa Một biến tính lương
-// exports.DeleteVarTinhLuong = async (req, res) => {
-//   const {
-//     com_id,
-//     name_var,Ư
-//   } = req.body;
-
-//   if (!name_var) {
-//     functions.setError(res, "name_var is required");
-//   } else {
-//     const variableTinhluong = await functions.getDatafindOne(DefinationVariableTinhluong, { com_id: com_id, name_var: name_var });
-//     if (!variableTinhluong) {
-//       functions.setError(res, "variableTinhluong does not exist");
-//     } else {
-//       await functions.getDataDeleteOne(DefinationVariableTinhluong, { com_id: com_id, name_var: name_var })
-//         .then(() => functions.success(res, "Delete successfully", variableTinhluong))
-//         .catch((err) => functions.setError(res, err.message));
-//     }
-//   }
-// }
-
+// Xóa biến tính lương
 exports.DeleteVarTinhLuong = async (req, res) => {
   try {
     const {
@@ -906,4 +514,430 @@ exports.DeleteVarTinhLuong = async (req, res) => {
     functions.setError(res, err.message);
   }
 };
+
+
+
+exports.GetFormCompany = async (req, res) => {
+  try {
+    const { com_id } = req.body;
+    const data = await functions.getDatafind(FormCaculateTinhluong, { com_id: com_id });
+    if (data) {
+      return await functions.success(res, 'Lấy công thức thành công', { data });
+    };
+    return functions.setError(res, 'Không có dữ liệu', 404);
+  } catch (err) {
+    functions.setError(res, err.message);
+  }
+};
+
+
+//Tạo mới một biến tính lương(thêm cột) trong ô tính lương
+exports.CreateVarTinhLuong = async (req, res) => {
+  const {
+    note_var,
+    com_id
+  } = req.body;
+  const name_var = formatNoteVar(note_var)
+  const ForexistingNoteVarmula = await DefinationVariableTinhluong.findOne({ com_id, note_var });
+  if (!note_var) {
+    functions.setError(res, "note_var required");
+  }
+  else if (!com_id) {
+    functions.setError(res, "com_id required");
+  } else if (isNaN(com_id)) {
+    functions.setError(res, "Com_id must be a number");
+  }
+
+  else if (!ForexistingNoteVarmula) {
+    // let maxId = await functions.getMaxID(DefinationVariableTinhluong);
+    // if (!maxId) {
+    //   maxId = 0;
+    // }
+    // const _id = Number(maxId) + 1;
+    const DefinationVariableTinhluongs = new DefinationVariableTinhluong({
+      // _id: _id,
+      com_id: com_id,
+      note_var: note_var,
+      name_var: name_var,
+
+    });
+    await DefinationVariableTinhluongs.save()
+      .then(() => {
+        functions.success(res, "DefinationVarTinhluong saved successfully", DefinationVariableTinhluongs);
+      })
+      .catch(err => functions.setError(res, err.message));
+  }
+}
+
+
+// Api thực hiện lưu dữ liệu xuất lương
+exports.SaveDataTinhLuong = async (req, res) => {
+  const { com_id, dataExportLuong } = req.body;
+
+  try {
+    let existingData = await DataExportLuong.findOne({ com_id });
+
+    if (existingData) {
+      // Nếu com_id đã tồn tại, thực hiện việc sửa đổi dữ liệu
+      existingData.dataExportLuong = dataExportLuong;
+      await existingData.save();
+
+      return res.status(200).json({
+        success: true,
+        data: existingData,
+        message: 'Dữ liệu đã được cập nhật thành công',
+      });
+    } else {
+      // Nếu com_id chưa tồn tại, thêm mới dữ liệu
+      const newData = new DataExportLuong({
+        com_id,
+        dataExportLuong,
+      });
+      await newData.save();
+
+      return res.status(201).json({
+        success: true,
+        data: newData,
+        message: 'Dữ liệu đã được thêm mới thành công',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Không thể lưu hoặc cập nhật dữ liệu',
+    });
+  }
+};
+// Api lấy ra dữ liệu xuất lương
+exports.GetDataTinhLuong = async (req, res) => {
+  try {
+    const { com_id } = req.body;
+    const data = await functions.getDatafind(DataExportLuong, {   com_id: com_id });
+    if (data) {
+      return await functions.success(res, 'Lấy dữu liệu lương thành công', { data });
+
+    };
+    return functions.setError(res, 'Không có dữ liệu', 404);
+  } catch (err) {
+    functions.setError(res, err.message);
+  }
+};
+
+
+// //API thực hiện tính lương
+// exports.Calculate = async (req, res) => {
+//   try {
+//     const { cell, com_id } = req.body;
+//     // Lấy công thức từ cơ sở dữ liệu dựa trên com_id
+//     const formCaculate = await FormCaculateTinhluong.findOne({ com_id });
+//     if (!formCaculate || !formCaculate.form_caculate) {
+//       res.status(404).json({ error: 'Không tìm thấy công thức tính lương cho công ty' });
+//       return;
+//     }
+//     const formula = formCaculate.form_caculate;
+
+//     // Kiểm tra công thức trước khi tính toán
+//     if (!formula) {
+//       res.status(400).json({ error: 'Công thức không hợp lệ' });
+//       return;
+//     }
+//     // Lấy giá trị từ cơ sở dữ liệu cho các ô trong công thức
+//     const operands = formula.match(/[A-Z]+\d+|\d+[A-Z]+/g);
+
+
+//     var newformula = formula
+//     for (const operand of operands) {
+//       const cellValue = await Cellvalue.findOne({ cell: operand });
+//       let tempValue = cellValue ? cellValue.value : 0;
+//       newformula = newformula.replace(operand, tempValue);
+//       newformula = newformula.replace(/^=/, '')
+
+//     }
+//     var answer = eval(newformula)
+//     var result = answer.toFixed(2);
+//     //Kiểm tra ô đã có trong cơ sở dữ liệu chưa nếu có thì sửa còn chưa có thì thêm mới
+//     const cellvalue = await Cellvalue.findOne({ cell, com_id });
+//     if (cellvalue) {
+//       cellvalue.value = result;
+//       await cellvalue.save();
+//     } else {
+//       const newCellValue = new Cellvalue({ com_id, cell, value: result });
+//       await newCellValue.save();
+//     }
+
+
+//     functions.success(res, "Thực hiện tính thành công", { result })
+
+//   } catch (error) {
+//     // Nếu xảy ra lỗi trong quá trình tính toán, trả về phản hồi lỗi
+//     functions.setError(res, "Lỗi tính toán!", 510);
+//   }
+// };
+
+// API để xem  công thức theo công ty
+
+
+
+
+//API thêm, sửa giá trị một ô
+// exports.SetCellValue = async (req, res) => {
+//   try {
+//     const { com_id, cell, value } = req.body;
+//     const cellPattern = /^[A-Z]+\d+$/;
+//     if (!cellPattern.test(cell)) {
+//       functions.setError(res, "Invalid cell format. Cell must be in the format like A1, A2, B3, ...");
+//       return;
+//     }
+//     if (isNaN(com_id)) {
+//       functions.setError(res, "Id must be a number");
+//     } else {
+//       const data = await Cellvalue.findOne({ com_id, cell });
+
+//       if (data) {
+//         data.value = value;
+//         await data.save();
+//         functions.success(res, 'Giá trị đã được cập nhật', { cellValue: data })
+
+//       } else {
+//         const newCellValue = new Cellvalue({ com_id, cell, value })
+//         await newCellValue.save();
+//         functions.success(res, 'Giá trị đã được thêm mới', { cellValue: newCellValue });
+//       }
+//     }
+//   } catch (error) {
+//     functions.setError(res, "thêm giá trị thất bại!", 510);
+
+//   }
+// };
+
+//Api xem tất cả các ô
+// exports.getAllCellValue = async (req, res) => {
+//   try {
+//     const allCellValues = await Cellvalue.find();
+//     functions.success(res, 'Xem danh sách các ô thành công!', { allCellValues })
+//   } catch (error) {
+//     functions.setError(res, "Lỗi truy vấn dữ liệu!", 510);
+
+//   }
+// };
+
+
+//Api lấy ra một ô của một công ty
+// exports.getOneCellValue = async (req, res) => {
+//   try {
+//     const { com_id, cell: cell } = req.body;
+//     const data = await functions.getDatafind(Cellvalue, { com_id: com_id, cell: cell });
+//     if (data) {
+//       return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data });
+//     };
+//   } catch (error) {
+//     functions.setError(res, "Lỗi truy vấn dữ liệu!", 510);
+
+//   }
+// };
+
+//Api lấy các ô theo công ty
+// exports.getAllCellValueCompany = async (req, res) => {
+//   try {
+//     const { com_id } = req.body;
+//     const data = await functions.getDatafind(Cellvalue, { com_id: com_id });
+//     // if (data) {
+//     //   return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data });
+//     // };
+//     if (data) {
+//       // Sắp xếp dữ liệu theo khóa "cell" tăng dần
+//       const sortedData = data.sort((a, b) => {
+//         if (a.cell < b.cell) {
+//           return -1;
+//         }
+//         if (a.cell > b.cell) {
+//           return 1;
+//         }
+//         return 0;
+//       });
+
+//       return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data: sortedData });
+//     }
+//     return functions.setError(res, 'Không có dữ liệu', 404);
+//   } catch (err) {
+//     functions.setError(res, err.message);
+//   }
+// };
+
+
+
+
+// //Api lấy các ô theo công ty
+// exports.getDataCellCompany = async (req, res) => {
+//   try {
+//     const { com_id } = req.body;
+//     const data = await functions.getDatafind(Cellvalue, { com_id: com_id });
+
+//     if (data) {
+//       // Sắp xếp dữ liệu theo khóa "cell" tăng dần
+//       const sortedData = data.sort((a, b) => {
+//         if (a.cell < b.cell) {
+//           return -1;
+//         }
+//         if (a.cell > b.cell) {
+//           return 1;
+//         }
+//         return 0;
+//       });
+
+//       const transformedData = sortedData.map(item => {
+//         return `${item.cell}:${item.value}`;
+//       });
+
+//       const columns = Array.from({ length: 40 }, (_, index) => String.fromCharCode(65 + index)); // Tạo một mảng chứa các chữ cái A-Z tương ứng với số cột
+
+//       const resultData = columns.map(column => {
+//         return transformedData.filter(item => item.startsWith(`${column}:`));
+//       });
+
+//       return await functions.success(res, 'Lấy dữ liệu các ô thành c', { data: resultData });
+//     }
+
+//     return functions.setError(res, 'Không có dữ liệu', 404);
+//   } catch (err) {
+//     functions.setError(res, err.message);
+//   }
+// };
+
+
+
+//API thực hiện tính lương
+// exports.Calculate = async (req, res) => {
+//   try {
+//     const { cell, com_id } = req.body;
+//     // Lấy công thức từ cơ sở dữ liệu dựa trên com_id
+//     const formCaculate = await FormCaculateTinhluong.findOne({ com_id });
+//     if (!formCaculate || !formCaculate.form_caculate) {
+//       res.status(404).json({ error: 'Không tìm thấy công thức tính lương cho công ty' });
+//       return;
+//     }
+//     const formula = formCaculate.form_caculate;
+
+//     // Kiểm tra công thức trước khi tính toán
+//     if (!formula) {
+//       res.status(400).json({ error: 'Công thức không hợp lệ' });
+//       return;
+//     }
+//     // Lấy giá trị từ cơ sở dữ liệu cho các ô trong công thức
+//     const operands = formula.match(/[A-Z]+\d+|\d+[A-Z]+/g);
+
+
+//     var newformula = formula
+//     for (const operand of operands) {
+//       const cellValue = await Cellvalue.findOne({ cell: operand });
+//       let tempValue = cellValue ? cellValue.value : 0;
+//       newformula = newformula.replace(operand, tempValue);
+//       newformula = newformula.replace(/^=/, '')
+
+//     }
+//     var answer = eval(newformula)
+//     var result = answer.toFixed(2);
+//     //Kiểm tra ô đã có trong cơ sở dữ liệu chưa nếu có thì sửa còn chưa có thì thêm mới
+//     const cellvalue = await Cellvalue.findOne({ cell, com_id });
+//     if (cellvalue) {
+//       cellvalue.value = result;
+//       await cellvalue.save();
+//     } else {
+//       const newCellValue = new Cellvalue({ com_id, cell, value: result });
+//       await newCellValue.save();
+//     }
+
+
+//     functions.success(res, "Thực hiện tính thành công", { result })
+
+//   } catch (error) {
+//     // Nếu xảy ra lỗi trong quá trình tính toán, trả về phản hồi lỗi
+//     functions.setError(res, "Lỗi tính toán!", 510);
+//   }
+// };
+
+
+
+//Tạo một cột header (note_var) mới trong ô tính lương
+// exports.CreateNewColum = async (req, res) => {
+//   const {
+//     note_var,
+//     name_var
+//   } = req.body;
+
+//   if (!note_var) {
+//     functions.setError(res, "note_var required");
+//   } else if (!name_var) {
+//     functions.setError(res, "name_var required");
+//   } else {
+//     let maxId = await functions.getMaxID(SampleDefinationVarTinhluong);
+//     if (!maxId) {
+//       maxId = 0;
+//     }
+//     const _id = Number(maxId) + 1;
+//     const SampleDefinationVarTinhluongs = new SampleDefinationVarTinhluong({
+//       _id: _id,
+//       note_var: note_var,
+//       name_var: name_var
+//     });
+//     await SampleDefinationVarTinhluongs.save()
+//       .then(() => {
+//         functions.success(res, "SampleDefinationVarTinhluong saved successfully", SampleDefinationVarTinhluongs);
+//       })
+//       .catch(err => functions.setError(res, err.message));
+//   }
+// }
+
+
+
+
+
+
+
+
+// API tạo mới nhiều biến tính lương từ mảng data
+// exports.CreateMultipleVarTinhLuong = async (req, res) => {
+//   try {
+//     const { data, com_id } = req.body;
+//     if (!Array.isArray(data) || !com_id) {
+//       return functions.setError(res, "Invalid input data");
+//     }
+
+//     const createdVariables = [];
+
+//     for (const note_var of data) {
+//       const name_var = formatNoteVar(note_var);
+
+//       // Kiểm tra xem biến tính lương đã tồn tại hay chưa
+//       const existingVariable = await DefinationVariableTinhluong.findOne({ com_id, note_var });
+
+//       if (!existingVariable) {
+//         let maxId = await functions.getMaxID(DefinationVariableTinhluong);
+//         if (!maxId) {
+//           maxId = 0;
+//         }
+//         const _id = Number(maxId) + 1;
+
+//         const newVariable = new DefinationVariableTinhluong({
+//           _id,
+//           com_id,
+//           note_var,
+//           name_var,
+//         });
+
+//         await newVariable.save();
+//         createdVariables.push(newVariable);
+//       }
+//     }
+
+//     if (createdVariables.length > 0) {
+//       functions.success(res, "DefinationVarTinhluong saved successfully", createdVariables);
+//     } else {
+//       functions.setError(res, "No new variables created");
+//     }
+//   } catch (error) {
+//     functions.setError(res, error.message);
+//   }
+// };
+
 
