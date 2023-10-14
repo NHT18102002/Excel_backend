@@ -3,8 +3,6 @@ const Schema = mongoose.Schema;
 
 const formCaculateTinhluongSchema = new Schema({
 
-
-    
 em_id:{
     type:Number
 },
