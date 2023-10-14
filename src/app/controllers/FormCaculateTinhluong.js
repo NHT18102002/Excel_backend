@@ -4,7 +4,6 @@ const functions = require("../../services/functions");
 const FormCaculateTinhluong = require("../models/FormCaculateTinhluong")
 // const SampleDefinationVarTinhluong = require("../../models/qlcnew/tinhluongexcel/SampleDefinationVarTinhluong");
 const DefinationVariableTinhluong = require("../models/DefinationVariableTinhluong");
-const defaultData = require("../../util/data")
 const DataExportLuong = require("../models/DataExportLuong")
 
 
