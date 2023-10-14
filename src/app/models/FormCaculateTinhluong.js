@@ -2,8 +2,17 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const formCaculateTinhluongSchema = new Schema({
+
+
+    
+em_id:{
+    type:Number
+},
 com_id:{
     type: Number
+},
+form_excels:{
+    type:String
 },
 form_caculate:{
     type: String

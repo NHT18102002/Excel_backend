@@ -62,16 +62,19 @@ function formatNoteVar(NoteVar) {
 
 
 // API để tạo công thức
+// API để tạo công thức
 exports.CreateForm = async (req, res) => {
   try {
-    const { com_id, form_caculate, user_edit } = req.body;
+    const {em_id, com_id, form_caculate, user_edit, form_excels } = req.body;
     const time_created = new Date();
     const time_edited = time_created;
 
     // Kiểm tra sự tồn tại của com_id
-    const Formula = await FormCaculateTinhluong.findOne({ com_id });
+    const Formula = await FormCaculateTinhluong.findOne({ com_id, em_id });
     if (Formula) {
       // Sửa công thức nếu com_id đã tồn tại
+      Formula.em_id = em_id;
+      Formula.form_excels = form_excels;
       Formula.form_caculate = form_caculate;
       Formula.user_edit = user_edit;
       Formula.time_edited = time_edited;
@@ -81,7 +84,9 @@ exports.CreateForm = async (req, res) => {
 
     } else {
       const Formula = new FormCaculateTinhluong({
+        em_id,
         com_id,
+        form_excels,
         form_caculate,
         user_edit,
         time_created,
